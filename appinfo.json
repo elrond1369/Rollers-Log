@@ -1,0 +1,19 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "elrond1369@gmail.com",
+    "longName": "Rollers Log",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "sdkVersion": "3",
+    "shortName": "Rollers Log",
+    "uuid": "63d1bea2-ebf9-4185-ab22-c4f550467e9c",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
