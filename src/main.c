@@ -7,13 +7,53 @@ static SimpleMenuLayer *s_main_menu;
 static SimpleMenuSection s_main_sections[1];
 static SimpleMenuItem s_main_items[2];
 static TextLayer *s_roll_header;
-static TextLayer *s_rack_header;
+static TextLayer * s_rack_header;
 static TextLayer *s_start_time;
 static TextLayer *s_stop_time;
 static TextLayer *s_total_time;
 static TextLayer *s_send_header;
 static Window *s_dissconected_window;
 static TextLayer *s_dissconected_header;
+const char *s_rack_start[50];
+const char *s_rack_end[50];
+static char s_roll_string[]="Racks:  | Avg:  ";
+static char s_rack_string[]="Rack   ";
+static char s_cur_rack[]="01";
+static char s_total_racks[]="01";
+void update_rack_view() {
+  if(s_cur_rack[0]=='0'){
+    s_rack_string[5]=s_cur_rack[1];
+  } else {
+    s_rack_string[5]=s_cur_rack[0];
+    s_rack_string[6]=s_cur_rack[1];
+  }
+  text_layer_set_text(s_rack_header, s_rack_string);
+}
+void next_rack() {
+  if(s_cur_rack[1]=='9') {
+    s_cur_rack[1]='0';
+    s_cur_rack[0]=s_cur_rack[0]+1;
+  } else {
+    s_cur_rack[1]=s_cur_rack[1]+1;
+  }
+  update_rack_view();
+}
+void prev_rack() {
+  if(s_cur_rack[0]=='0' && s_cur_rack[1]=='1') {
+    return;
+  }
+  if(s_cur_rack[1]=='0') {
+    s_cur_rack[0]=s_cur_rack[0]-1;
+    s_cur_rack[1]='9';
+  } else {
+    s_cur_rack[1]=s_cur_rack[1]-1;
+  }
+  update_rack_view();
+}
+void roll_click(Window *window) {
+  window_single_click_subscribe(BUTTON_ID_DOWN, next_rack);
+  window_single_click_subscribe(BUTTON_ID_UP, prev_rack);
+}
 void bluetooth_connection_change(bool conected) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "BT");
   bt =conected;
@@ -52,7 +92,7 @@ void main_window_unload(Window *window) {
   
 };
 void roll_window_load(Window *window) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Roll LOad");
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Roll Load");
   s_roll_header = text_layer_create(GRect(0,1,144,28));
   text_layer_set_background_color(s_roll_header, GColorBlack);
   text_layer_set_text_color(s_roll_header, GColorWhite);
@@ -61,10 +101,15 @@ void roll_window_load(Window *window) {
   text_layer_set_text(s_roll_header, "Racks: 0 | Avg: 00");
   layer_add_child(window_get_root_layer(s_roll_window), text_layer_get_layer(s_roll_header));
   
-  s_rack_header = text_layer_create(GRect(0, 35, 124, 18));
-  text_layer_set_text(s_rack_header, "Rack 1");
+  s_rack_header = text_layer_create(GRect(10, 35, 124, 18));
+  if(s_cur_rack[0]=='0') {
+    s_rack_string[5] = s_cur_rack[1];
+  } else {
+    s_rack_string[5] = s_cur_rack[0];
+    s_rack_string[6] = s_cur_rack[1];
+  }
+  text_layer_set_text(s_rack_header, s_rack_string);
   text_layer_set_font(s_rack_header, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
-  text_layer_set_text_alignment(s_rack_header, GTextAlignmentCenter);
   text_layer_set_background_color(s_rack_header, GColorWhite);
   text_layer_set_text_color(s_rack_header, GColorBlack);
   layer_add_child(window_get_root_layer(s_roll_window), text_layer_get_layer(s_rack_header));
@@ -126,6 +171,7 @@ void init() {
     .load=roll_window_load,
     .unload=roll_window_unload
   });
+  window_set_click_config_provider(s_roll_window, (ClickConfigProvider) roll_click);
   s_send_window = window_create();
   window_set_window_handlers(s_send_window, (WindowHandlers){
     .load=send_window_load,
